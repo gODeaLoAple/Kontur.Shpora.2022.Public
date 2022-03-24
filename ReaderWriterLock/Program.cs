@@ -7,12 +7,12 @@ using NUnit.Framework;
 
 namespace ReaderWriterLock
 {
-	//public class LockTests : RwLockTests<LockWrapper> {}
-	public class ReaderWriterLockSlimTests : RwLockTests<ReaderWriterLockWrapper> {}
+    //public class LockTests : RwLockTests<LockWrapper> {}
+	//public class ReaderWriterLockSlimTests : RwLockTests<ReaderWriterLockWrapper> {}
 
-	//public class RwLockTests : RwLockTests<RwLock> {}
+	public class RwLockTests : RwLockTests<RwLock> {}
 
-	[TestFixture]
+    [TestFixture]
 	public abstract class RwLockTests<T> where T : IRwLock, new()
 	{
 		[SetUp]
