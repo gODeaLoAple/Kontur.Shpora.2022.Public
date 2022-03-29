@@ -5,6 +5,8 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using log4net;
+// ReSharper disable AssignNullToNotNullAttribute
+#pragma warning disable CS0618
 
 namespace ClusterClient.Clients
 {
