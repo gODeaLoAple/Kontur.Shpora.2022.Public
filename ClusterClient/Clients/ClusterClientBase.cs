@@ -32,6 +32,9 @@ namespace ClusterClient.Clients
             return request;
         }
 
+        protected static HttpWebRequest CreateRequestWithQuery(string uriStr, string query)
+            => CreateRequest($"{uriStr}?query={query}");
+
         protected async Task<string> ProcessRequestAsync(WebRequest request)
         {
             var timer = Stopwatch.StartNew();

@@ -18,7 +18,7 @@ public class ParallelClusterClient : ClusterClientBase
 	public override async Task<string> ProcessRequestAsync(string query, TimeSpan timeout)
 	{
 		var requestTasks = ReplicaAddresses
-			.Select(uri => CreateRequest(uri + "?query=" + query))
+			.Select(uri => CreateRequestWithQuery(uri, query))
 			.Select(request =>
 			{
 				Log.InfoFormat($"Processing {request.RequestUri}");

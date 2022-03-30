@@ -17,7 +17,7 @@ namespace ClusterClient.Clients
         {
             var uri = ReplicaAddresses[random.Next(ReplicaAddresses.Length)];
 
-            var webRequest = CreateRequest(uri + "?query=" + query);
+            var webRequest = CreateRequestWithQuery(uri, query);
             
             Log.InfoFormat($"Processing {webRequest.RequestUri}");
 
