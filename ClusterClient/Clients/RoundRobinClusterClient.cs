@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,30 +10,34 @@ namespace ClusterTests;
 
 public class RoundRobinClusterClient : ClusterClientBase
 {
+	private readonly Dictionary<string, int> priority;
 
 	public RoundRobinClusterClient(string[] replicaAddresses)
 		: base(replicaAddresses)
 	{
 		if (replicaAddresses.Length == 0)
 			throw new ArgumentException("Expected addresses count to be positive, but actual zero.");
+		priority = replicaAddresses.ToDictionary(x => x, x => 0);
 	}
 
 	public override async Task<string> ProcessRequestAsync(string query, TimeSpan timeout)
 	{
-		var requests = ReplicaAddresses
-			.Select(uri => CreateRequestWithQuery(uri, query))
+		var addresses = ReplicaAddresses
+			.OrderBy(x => priority[x])
 			.ToArray();
 
-		var n = requests.Length;
+		var n = addresses.Length;
 		var sw = Stopwatch.StartNew();
-		foreach (var request in requests)
+		foreach (var address in addresses)
 		{
 			var stepTimeout = timeout / n;
+			var request = CreateRequestWithQuery(address, query);
 			var task = ProcessRequestAsync(request);
 			Log.InfoFormat($"Processing {request.RequestUri}");
 			sw.Restart();
 			await Task.WhenAny(task, Task.Delay(stepTimeout));
 			sw.Stop();
+			priority[address] += (int)sw.ElapsedMilliseconds;
 			
 			if (task.IsCompleted && !task.IsFaulted)
 			{

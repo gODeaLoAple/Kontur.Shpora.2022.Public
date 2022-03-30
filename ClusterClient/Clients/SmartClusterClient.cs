@@ -11,32 +11,38 @@ namespace ClusterTests;
 
 public class SmartClusterClient : ClusterClientBase
 {
+	private readonly Dictionary<string, int> priority;
+
 	public SmartClusterClient(string[] replicaAddresses)
 		: base(replicaAddresses)
 	{
 		if (replicaAddresses.Length == 0)
 			throw new ArgumentException("Expected addresses count to be positive, but actual zero.");
+		priority = replicaAddresses.ToDictionary(x => x, x => 0);
 	}
 
 	public override async Task<string> ProcessRequestAsync(string query, TimeSpan timeout)
 	{
-		var requests = ReplicaAddresses
-			.Select(uri => CreateRequestWithQuery(uri, query))
+		var addresses = ReplicaAddresses
+			.OrderBy(x => priority[x])
 			.ToArray();
 
-		var n = requests.Length;
+		var n = addresses.Length;
 		var tasks = new List<Task<string>>();
 		var sw = Stopwatch.StartNew();
-		foreach (var request in requests)
+		foreach (var address in addresses)
 		{
 			var stepTimeout = timeout / n;
+			var request = CreateRequestWithQuery(address, query);
 			var task = ProcessRequestAsync(request);
+			Log.InfoFormat($"Processing {request.RequestUri}");
 			tasks.Add(task);
 			var aggregateTask = Task.WhenAny(tasks);
 			
 			sw.Restart();
 			await Task.WhenAny(aggregateTask, Task.Delay(stepTimeout));
 			sw.Stop();
+			priority[address] += (int)sw.ElapsedMilliseconds;
 			if (aggregateTask.IsCompleted)
 			{
 				var completedTask = aggregateTask.Result;
